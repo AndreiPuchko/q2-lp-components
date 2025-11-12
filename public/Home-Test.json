@@ -1,0 +1,25 @@
+[
+    {
+        "key": "(sich) beschäftigen",
+        "sentence": "Der neue Mitarbeiter {} beschäftigt sich intensiv {mit} der Erstellung des Jahresberichts.",
+        "words": [
+            "um..zu",
+            "damit..-",
+            "-..damit",
+            "zu..um",
+            "-..-"
+        ]
+    },
+    {
+        "key": "(sich) beschäftigen",
+        "sentence": "Sie {beschäftigt} sich auch in ihrer Freizeit mit Fragen der Logistik.",
+        "words": [
+            "beschäftigt",
+            "beschäftigen",
+            "beschäftigst",
+            "beschäftigte",
+            "beschäftigen",
+            "beschäftigst"
+        ]
+    }
+]
