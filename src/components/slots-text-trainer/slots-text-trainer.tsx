@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import "./slots-text-trainer.css";
 
 interface WordDragExerciseProps {
-  text: string;
+  data: {
+    slot_text: string[];
+  };
 }
 
 interface Blank {
@@ -21,7 +23,7 @@ interface Word {
   text: string;
 }
 
-export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
+export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [masterWords, setMasterWords] = useState<Word[]>([]);
   const [availableIds, setAvailableIds] = useState<number[]>([]);
@@ -31,10 +33,11 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
   const touchMoveRef = useRef<{ lastX: number; lastY: number } | null>(null);
   const [dragGhost, setDragGhost] = useState<{ text: string; x: number; y: number } | null>(null);
 
-  // Parse input once
+  // --- Parse input once ---
   useEffect(() => {
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+    if (!data?.slot_text?.length) return;
 
+    const lines = data.slot_text.map((l) => l.trim()).filter(Boolean);
     let wordIdCounter = 1;
     let blankIdCounter = 1;
     const allWords: Word[] = [];
@@ -56,11 +59,13 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
         blankIdCounter++;
         lastIndex = regex.lastIndex;
       }
+
       parts.push(line.slice(lastIndex));
       parsedSentences.push({ parts, blanks });
     }
 
-    const shuffled = [...allWords.map((w) => w.id)];
+    // shuffle words
+    const shuffled = allWords.map((w) => w.id);
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -70,18 +75,19 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
     setSentences(parsedSentences);
     setAvailableIds(shuffled);
     setChecked(false);
-  }, [text]);
+  }, [data]);
 
+  // --- Helpers ---
   const getWordText = (id: number | null) =>
     id == null ? null : masterWords.find((w) => w.id === id)?.text || null;
 
-  // Unified move that updates sentences + availableIds atomically
+  // --- Unified move (drag-drop logic) ---
   const handleMove = (
     wordId: number,
     source: { type: "pool" | "blank"; sid?: number; bid?: number },
     target: { type: "pool" | "blank"; sid?: number; bid?: number }
   ) => {
-    let newSentences = sentences.map((s) => ({
+    const newSentences = sentences.map((s) => ({
       ...s,
       blanks: s.blanks.map((b) => ({ ...b })),
     }));
@@ -101,7 +107,6 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
     } else if (target.type === "blank" && target.sid != null && target.bid != null) {
       const blank = newSentences[target.sid].blanks.find((b) => b.id === target.bid);
       if (blank) {
-        // return existing placed to pool
         if (blank.placedId && !newAvailable.includes(blank.placedId)) {
           newAvailable.push(blank.placedId);
         }
@@ -111,15 +116,11 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
 
     setSentences(newSentences);
     setAvailableIds(newAvailable);
-    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event("resize"));
   };
 
-  // Desktop drag handlers
-  const onDragStart = (
-    e: React.DragEvent,
-    wordId: number,
-    source: { type: "pool" | "blank"; sid?: number; bid?: number }
-  ) => {
+  // --- Desktop drag handlers ---
+  const onDragStart = (e: React.DragEvent, wordId: number, source: any) => {
     e.dataTransfer.setData("wordId", wordId.toString());
     e.dataTransfer.setData("source", JSON.stringify(source));
     try {
@@ -127,133 +128,83 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
     } catch { }
   };
 
-  const onDragOver = (e: React.DragEvent) => e.preventDefault();
-
-  const onDrop = (e: React.DragEvent, target: { type: "pool" | "blank"; sid?: number; bid?: number }) => {
+  const onDrop = (e: React.DragEvent, target: any) => {
     e.preventDefault();
     const wordId = parseInt(e.dataTransfer.getData("wordId"), 10);
     const source = JSON.parse(e.dataTransfer.getData("source"));
     if (!Number.isNaN(wordId)) handleMove(wordId, source, target);
   };
 
-  // TOUCH: robust touch drag using elementFromPoint on touchend
-  useEffect(() => {
-    // nothing to set up globally initially
-    return () => {
-      // cleanup if any (safety)
-      dragRef.current = null;
-      touchMoveRef.current = null;
+  const onDragOver = (e: React.DragEvent) => e.preventDefault();
+
+  // --- Touch drag logic ---
+  const startTouchDrag = (wordId: number, source: any, touch: React.Touch) => {
+    // const startTouchDrag = (wordId: number, source: any, touch: Touch) => {
+    const onTouchMove = (ev: TouchEvent) => {
+      const t = ev.touches[0];
+      touchMoveRef.current = { lastX: t.clientX, lastY: t.clientY };
+      setDragGhost({
+        text: masterWords.find((w) => w.id === wordId)?.text || "",
+        x: t.clientX,
+        y: t.clientY,
+      });
+      ev.preventDefault();
     };
-  }, []);
 
-  const startTouchDrag = (wordId: number, source: { type: "pool" | "blank"; sid?: number; bid?: number }, touch: Touch) => {
-    // prevent page scroll while dragging
-    if (touch && (touch as any).target) {
-      // add listeners
-      const onTouchMove = (ev: TouchEvent) => {
-        if (ev.touches && ev.touches[0]) {
-          touchMoveRef.current = { lastX: ev.touches[0].clientX, lastY: ev.touches[0].clientY };
-          setDragGhost({
-            text: masterWords.find((w) => w.id === wordId)?.text || "",
-            x: ev.touches[0].clientX,
-            y: ev.touches[0].clientY,
-          });
-        }
-        ev.preventDefault();
-      };
-      const onTouchEndGlobal = (ev: TouchEvent) => {
-        // use changedTouches to get final position
-        const touchEnd = (ev.changedTouches && ev.changedTouches[0]) || touch;
-        const x = touchEnd.clientX;
-        const y = touchEnd.clientY;
-        const el = document.elementFromPoint(x, y) as HTMLElement | null;
-        resolveTouchDrop(el, wordId, source);
-        // cleanup
-        setDragGhost(null);
-        window.removeEventListener("touchmove", onTouchMove, { passive: false } as any);
-        window.removeEventListener("touchend", onTouchEndGlobal);
-        window.removeEventListener("touchcancel", onTouchEndGlobal);
-      };
+    const onTouchEnd = (ev: TouchEvent) => {
+      const t = (ev.changedTouches && ev.changedTouches[0]) || touch;
+      const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
+      resolveTouchDrop(el, wordId, source);
+      setDragGhost(null);
+      window.removeEventListener("touchmove", onTouchMove, { passive: false } as any);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
+    };
 
-      window.addEventListener("touchmove", onTouchMove, { passive: false } as any);
-      window.addEventListener("touchend", onTouchEndGlobal);
-      window.addEventListener("touchcancel", onTouchEndGlobal);
+    window.addEventListener("touchmove", onTouchMove, { passive: false } as any);
+    window.addEventListener("touchend", onTouchEnd);
+    window.addEventListener("touchcancel", onTouchEnd);
 
-      // store drag info
-      dragRef.current = { id: wordId, source };
-      touchMoveRef.current = { lastX: touch.clientX, lastY: touch.clientY };
-    }
+    dragRef.current = { id: wordId, source };
+    touchMoveRef.current = { lastX: touch.clientX, lastY: touch.clientY };
   };
 
-  const resolveTouchDrop = (el: HTMLElement | null, wordId: number, source: { type: "pool" | "blank"; sid?: number; bid?: number }) => {
-    // find closest blank
-    if (!el) {
-      // if no element found, return word to pool
-      handleMove(wordId, source, { type: "pool" });
-      dragRef.current = null;
-      touchMoveRef.current = null;
-      return;
-    }
+  const resolveTouchDrop = (el: HTMLElement | null, wordId: number, source: any) => {
+    if (!el) return handleMove(wordId, source, { type: "pool" });
 
     const blankEl = el.closest<HTMLElement>(".blank[data-sid][data-bid]");
     if (blankEl) {
-      const sidAttr = blankEl.getAttribute("data-sid");
-      const bidAttr = blankEl.getAttribute("data-bid");
-      const sid = sidAttr ? parseInt(sidAttr, 10) : undefined;
-      const bid = bidAttr ? parseInt(bidAttr, 10) : undefined;
-      if (sid !== undefined && bid !== undefined) {
-        handleMove(wordId, source, { type: "blank", sid, bid });
-        dragRef.current = null;
-        touchMoveRef.current = null;
-        return;
-      }
+      const sid = parseInt(blankEl.getAttribute("data-sid")!, 10);
+      const bid = parseInt(blankEl.getAttribute("data-bid")!, 10);
+      return handleMove(wordId, source, { type: "blank", sid, bid });
     }
 
-    // if dropped inside pool area
     const poolEl = el.closest<HTMLElement>(".word-pool");
-    if (poolEl) {
-      handleMove(wordId, source, { type: "pool" });
-      dragRef.current = null;
-      touchMoveRef.current = null;
-      return;
-    }
+    if (poolEl) return handleMove(wordId, source, { type: "pool" });
 
-    // else return to pool by default
     handleMove(wordId, source, { type: "pool" });
-    dragRef.current = null;
-    touchMoveRef.current = null;
   };
 
-  // called on touchstart of a pool word or a placed blank
-  const onTouchStartWord = (ev: React.TouchEvent, wordId: number, source: { type: "pool" | "blank"; sid?: number; bid?: number }) => {
-    // prevent scroll
+  const onTouchStartWord = (ev: React.TouchEvent, wordId: number, source: any) => {
     ev.preventDefault();
-    const touch = ev.touches && ev.touches[0];
-    if (touch) startTouchDrag(wordId, source, touch as unknown as Touch);
+    const touch = ev.touches[0];
+    if (touch) startTouchDrag(wordId, source, touch);
   };
 
-  // Small helpers for generating pool words list
+  // --- Derived values ---
   const poolWords = availableIds.map((id) => ({ id, text: getWordText(id)! }));
 
-  // Buttons
   const onCheck = () => setChecked(true);
   const onReset = () => {
-    const allIds = masterWords.map((w) => w.id);
-    const shuffled = [...allIds];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-
+    const shuffled = masterWords.map((w) => w.id).sort(() => Math.random() - 0.5);
     const resetSentences = sentences.map((s) => ({
       ...s,
       blanks: s.blanks.map((b) => ({ ...b, placedId: null })),
     }));
-
     setSentences(resetSentences);
     setAvailableIds(shuffled);
     setChecked(false);
-    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event("resize"));
   };
 
   return (
@@ -305,10 +256,7 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
         className="word-pool"
         onDrop={(e) => onDrop(e, { type: "pool" })}
         onDragOver={onDragOver}
-        onTouchStart={(e) => {
-          /* prevent pool scroll on touch when starting drag on pool area */
-          e.preventDefault();
-        }}
+        onTouchStart={(e) => e.preventDefault()}
       >
         {poolWords.length ? (
           poolWords.map((w) => (
@@ -355,4 +303,4 @@ export const WordDragExercise: React.FC<WordDragExerciseProps> = ({ text }) => {
   );
 };
 
-export default WordDragExercise;
+export default SlotsTextTrainer;
