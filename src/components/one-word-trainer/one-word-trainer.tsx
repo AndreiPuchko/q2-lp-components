@@ -225,7 +225,6 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
     };
 
     const sentenceParts = processSentence(ex.sentence);
-
     return (
         <div className="exercise-container">
             <div className="stats">
@@ -235,7 +234,7 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
                 <span>Success Rate: {stats.percentage}%</span>
             </div>
 
-            <div className="sentence">
+            <div className="one-word-sentence">
                 {sentenceParts.map((part, index) =>
                     part.isBlank ? (
                         <div
