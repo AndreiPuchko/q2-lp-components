@@ -1,6 +1,6 @@
 import { Q2App } from 'q2-web';
 import type { Q2AppProps, Q2AppState } from 'q2-web';
-import { getContent } from "./components/content"
+import { getFolderContent } from "./components/content"
 import './App.css';
 
 interface AppState extends Q2AppState {
@@ -15,7 +15,7 @@ export class App extends Q2App<Q2AppProps, AppState> {
   }
 
   showHome = () => {
-    getContent("", "HOME").then((f) => { if (f) this.showDialog(f) })
+    getFolderContent("", "HOME").then((f) => { if (f) this.showDialog(f) })
   };
 
 

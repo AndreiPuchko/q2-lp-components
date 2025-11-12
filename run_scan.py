@@ -18,7 +18,7 @@ def generate_folder_content(base_path: str):
         # Prepare data
         data = {
             "folders": sorted(dirs),
-            "files": sorted(files),
+            "files": sorted([x for x in files if x.endswith(".json")]),
         }
 
         json_path = folder_path / "folder_content.json"
