@@ -2,7 +2,6 @@ import React from "react";
 import "./one-word-trainer.css";
 import { GetQ2AppInstance } from "q2-web";
 
-// --- Types ---
 type WordEntry = {
     key: string;
     sentence: string;
@@ -13,8 +12,13 @@ interface OneWordTrainerData {
     data: WordEntry[];
 }
 
-// --- Cache key generation ---
-async function makeCacheHash(data: any): Promise<string> {
+type SentencePart = {
+    isBlank: boolean;
+    text: string;
+    index: number;
+};
+
+async function makeHash(data: any): Promise<string> {
     const stableStringify = (obj: any): string => {
         if (Array.isArray(obj)) {
             return `[${obj.map(stableStringify).join(",")}]`;
@@ -37,9 +41,8 @@ async function makeCacheHash(data: any): Promise<string> {
         .join("");
 }
 
-// --- Storage helpers ---
 const saveStatsToStorage = (
-    cacheKey: string,
+    hashKey: string,
     answers: Record<
         number,
         { correct: boolean; lastPassNumber?: number; correctCount?: number }
@@ -48,14 +51,14 @@ const saveStatsToStorage = (
 ) => {
     const data = { answers, passCount };
     try {
-        localStorage.setItem(`trainer_stats_${cacheKey}`, JSON.stringify(data));
+        localStorage.setItem(`trainer_stats_${hashKey}`, JSON.stringify(data));
     } catch (e) {
         console.error("Failed to save stats to localStorage:", e);
     }
 };
 
-const loadStatsFromStorage = (cacheKey: string) => {
-    const stored = localStorage.getItem(`trainer_stats_${cacheKey}`);
+const loadStatsFromStorage = (hashKey: string) => {
+    const stored = localStorage.getItem(`trainer_stats_${hashKey}`);
     if (stored) {
         try {
             const data = JSON.parse(stored);
@@ -70,34 +73,33 @@ const loadStatsFromStorage = (cacheKey: string) => {
     return { answers: {}, passCount: 0 };
 };
 
-// --- Component ---
+const ANSWER_DELIMITER = "...";
+const EMPTY_SLOT_INDICATOR = "-";
+
 export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
-    const [cacheKey, setCacheKey] = React.useState<string | null>(null);
+    const [hashKey, setHashKey] = React.useState<string | null>(null);
 
     const [currentIndex, setCurrentIndex] = React.useState(() =>
         Math.floor(Math.random() * data.length)
     );
     const [selectedWord, setSelectedWord] = React.useState("");
     const [isChecked, setIsChecked] = React.useState(false);
-    const [shuffledWords, setShuffledWords] = React.useState<string[]>([]);
 
     const [passCount, setPassCount] = React.useState(0);
     const [answers, setAnswers] = React.useState<
         Record<number, { correct: boolean; lastPassNumber?: number; correctCount?: number }>
     >({});
 
-    // Compute cache key from data
     React.useEffect(() => {
         (async () => {
-            const hash = await makeCacheHash(data);
-            setCacheKey(hash);
+            const hash = await makeHash(data);
+            setHashKey(hash);
             const stored = loadStatsFromStorage(hash);
             setAnswers(stored.answers);
             setPassCount(stored.passCount);
         })();
     }, [data]);
 
-    // --- Derived stats ---
     const stats = React.useMemo(() => {
         const total = Object.values(answers).length;
         const correct = Object.values(answers).filter((a) => a.correct).length;
@@ -109,19 +111,42 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
         };
     }, [answers]);
 
-    // --- Logic ---
     const ex = data[currentIndex];
-    let answer = "";
 
-    const processSentence = (sentence: string) => {
-        const parts = sentence.split(/(\{.*?\})/);
-        const match = sentence.match(/\{(.*?)\}/);
-        if (match) answer = match[1];
-        return parts.map((part) => ({
-            isBlank: part.startsWith("{") && part.endsWith("}"),
-            text: part,
-        }));
+    const getFilledSlots = (compositeWord: string) => {
+        const parts = compositeWord.split(ANSWER_DELIMITER);
+        // Map parts: "-" becomes empty string, others are used directly
+        return parts.map(p => p === EMPTY_SLOT_INDICATOR ? "" : p);
+    }
+
+    const processSentence = (ex: WordEntry) => {
+        const blankRegex = /\{.*?\}/g;
+        const parts = ex.sentence.split(blankRegex);
+        const matches = [...ex.sentence.matchAll(blankRegex)];
+
+        const _correctAnswer = matches.map(el =>
+            (el[0] === "{}" ? "-" : el[0]).replace(/[{}]/g, "")
+        );
+        const answer = _correctAnswer.join("...");
+
+        const words = ex.words.includes(answer)
+            ? [...ex.words]
+            : [...ex.words, answer];
+
+        const result = [];
+        for (let i = 0; i < parts.length; i++) {
+            result.push({ isBlank: false, text: parts[i], index: i });
+            if (i < matches.length) {
+                result.push({ isBlank: true, text: matches[i][0], index: i });
+            }
+        }
+        return { sentenceParts: result, correctAnswer: answer, words };
     };
+
+    const { sentenceParts, correctAnswer: correctAnswer, words } = processSentence(ex);
+    const correctSlots = correctAnswer.split(ANSWER_DELIMITER);
+
+    const selectedSlots = getFilledSlots(selectedWord);
 
     const getRandomIndex = () => {
         if (passCount > 0 && (passCount + 1) % 4 === 0) {
@@ -155,9 +180,27 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
         return pool[Math.floor(Math.random() * pool.length)];
     };
 
+    const handleNext = async () => {
+        setPassCount((prev) => {
+            const next = prev + 1;
+            if (hashKey) saveStatsToStorage(hashKey, answers, next);
+            return next;
+        });
+
+        const nextIndex = getRandomIndex();
+        setCurrentIndex(nextIndex);
+        setSelectedWord("");
+        setIsChecked(false);
+    };
+
+    const handleWordClick = (word: string) => {
+        setSelectedWord(word)
+    };
+
     const handleCheck = () => {
+        const isCorrect = selectedWord === correctAnswer;
         setIsChecked(true);
-        const isCorrect = selectedWord === answer;
+
         const newAnswers = {
             ...answers,
             [currentIndex]: {
@@ -169,43 +212,13 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
             },
         };
         setAnswers(newAnswers);
-        if (cacheKey) saveStatsToStorage(cacheKey, newAnswers, passCount);
+        if (hashKey) saveStatsToStorage(hashKey, newAnswers, passCount);
         return isCorrect;
     };
-
-    const handleNext = async () => {
-        if (selectedWord && !isChecked) {
-            const isCorrect = handleCheck();
-            const msgForm = await GetQ2AppInstance()?.showMsg(
-                `${ex.sentence}\n\n${isCorrect ? "Richtig! 👍" : `Falsch! Die richtige Antwort ist: ${answer}`}`,
-                isCorrect ? "success" : "error"
-            );
-            if (msgForm) setTimeout(() => msgForm.closeDialog(), 2000);
-        }
-
-        setPassCount((prev) => {
-            const next = prev + 1;
-            if (cacheKey) saveStatsToStorage(cacheKey, answers, next);
-            return next;
-        });
-
-        const nextIndex = getRandomIndex();
-        setCurrentIndex(nextIndex);
-        setShuffledWords([...data[nextIndex].words].sort(() => Math.random() - 0.5));
-        setSelectedWord("");
-        setIsChecked(false);
-    };
-
-    const handleWordClick = (word: string) => setSelectedWord(word);
 
     React.useEffect(() => {
         if (selectedWord && !isChecked) handleCheck();
     }, [selectedWord]);
-
-    React.useEffect(() => {
-        if (shuffledWords.length === 0)
-            setShuffledWords([...ex.words].sort(() => Math.random() - 0.5));
-    }, [ex.words, shuffledWords.length]);
 
     const handleReset = async () => {
         const ask = await GetQ2AppInstance()?.showMsg(
@@ -219,12 +232,10 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
             setSelectedWord("");
             setAnswers({});
             setPassCount(0);
-            setShuffledWords([...data[currentIndex].words].sort(() => Math.random() - 0.5));
-            if (cacheKey) saveStatsToStorage(cacheKey, {}, 0);
+            if (hashKey) saveStatsToStorage(hashKey, {}, 0);
         }
     };
 
-    const sentenceParts = processSentence(ex.sentence);
     return (
         <div className="exercise-container">
             <div className="stats">
@@ -235,23 +246,36 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
             </div>
 
             <div className="one-word-sentence">
-                {sentenceParts.map((part, index) =>
-                    part.isBlank ? (
-                        <div
-                            key={index}
-                            className={`blank ${isChecked
-                                    ? selectedWord === answer
-                                        ? "correct"
-                                        : "wrong"
-                                    : ""
-                                }`}
-                        >
-                            {selectedWord}
-                        </div>
-                    ) : (
-                        part.text
-                    )
-                )}
+                {sentenceParts.map((part: SentencePart, index) => {
+                    if (part.isBlank) {
+                        const filledWord = selectedSlots[part.index] || '';
+                        let className = "blank";
+
+                        if (isChecked) {
+                            const isSlotCorrect = filledWord === ((part && correctSlots[part.index] === "-" ? "" : correctSlots[part.index]) || '');
+                            if (isSlotCorrect) {
+                                className += " correct";
+                            } else {
+                                className += " wrong";
+                            }
+                        }
+
+                        return (
+                            <div
+                                key={index}
+                                className={className}
+                            >
+                                {filledWord}
+                            </div>
+                        );
+                    } else {
+                        return (
+                            <span key={index}>
+                                {part.text}
+                            </span>
+                        );
+                    }
+                })}
             </div>
 
             <div className="key">
@@ -259,8 +283,12 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
             </div>
 
             <div className="word-pool">
-                {shuffledWords.map((w, i) => (
-                    <div key={`${w}-${i}`} className="word" onClick={() => handleWordClick(w)}>
+                {[...words].sort(() => Math.random() - 0.5).map((w, i) => (
+                    <div
+                        key={`${w}-${i}`}
+                        className={`word ${w === selectedWord ? 'selected' : ''}`}
+                        onClick={() => handleWordClick(w)}
+                    >
                         {w}
                     </div>
                 ))}
@@ -271,7 +299,7 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
                 <button onClick={handleReset}>Reset</button>
             </div>
 
-            {selectedWord && selectedWord !== answer && (
+            {selectedWord && selectedWord !== correctAnswer && (
                 <div className="error-message">
                     Du hast einen Fehler gemacht. Versuch es noch mal.
                 </div>

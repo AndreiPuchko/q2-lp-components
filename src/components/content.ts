@@ -50,7 +50,6 @@ async function getFileContent(path: string) {
 
 export async function getFolderContent(path: string, title_path: string) {
     const folder_content: any = await fetchContent(`${path}/folder_content.json`);
-    console.log(folder_content, path)
     const content: Array<object> = [];
     if (folder_content.folders) {
         folder_content.folders.forEach((el:any) => { content.push({ folder: el, title: el, type: "folder" }) })

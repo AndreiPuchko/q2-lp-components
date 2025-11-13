@@ -1,3 +1,7 @@
+* {
+    white-space: normal;
+}
+
 .exercise-container {
     margin: 0 auto;
     width: 95%;
@@ -36,6 +40,7 @@
     text-align: left;
     white-space: normal;
     min-height: 10rem;
+    display: block;
     padding: 0.3rem 0;
 }
 
