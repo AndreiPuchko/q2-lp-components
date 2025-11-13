@@ -90,6 +90,16 @@
     user-select: none;
 }
 
+.selectedSlot {
+    border: 2px dashed black;
+    background-color: papayawhip;
+}
+
+.dark .selectedSlot {
+    border: 2px dashed white;
+}
+
+
 .word:hover {
     background: #c2deff;
 }
@@ -134,4 +144,15 @@
 
 .btn-reset:hover {
     background-color: #ccc;
+}
+
+.drag-ghost {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #999;
+    border-radius: 8px;
+    padding: 4px 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    pointer-events: none;
+    z-index: 9999;
 }

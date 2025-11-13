@@ -4,6 +4,7 @@ import "./slots-text-trainer.css";
 interface WordDragExerciseProps {
   data: {
     slot_text: string[];
+    wrong_answers?: string[];
   };
 }
 
@@ -62,6 +63,12 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
 
       parts.push(line.slice(lastIndex));
       parsedSentences.push({ parts, blanks });
+    }
+
+    if (data.wrong_answers) {
+      data.wrong_answers.forEach((el: string, idx: number) => {
+        allWords.push({ id: wordIdCounter+idx, text: el });
+      })
     }
 
     // shuffle words
@@ -284,16 +291,8 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
         <div
           className="drag-ghost"
           style={{
-            position: "fixed",
             left: dragGhost.x - 25,
-            top: dragGhost.y - 25,
-            background: "#fff",
-            border: "1px solid #999",
-            borderRadius: "8px",
-            padding: "4px 8px",
-            boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
-            pointerEvents: "none",
-            zIndex: 9999,
+            top: dragGhost.y - 25
           }}
         >
           {dragGhost.text}
