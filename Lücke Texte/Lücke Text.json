@@ -12,6 +12,11 @@
             "{Darf} er das?",
             "Vielen Dank!",
             "Andres Zambrano"
+        ],
+        "wrong_answers": [
+            "1",
+            "2",
+            "3"
         ]
     }
 ]
