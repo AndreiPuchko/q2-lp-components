@@ -4,7 +4,7 @@ import { SlotsTextTrainer } from "./slots-text-trainer/slots-text-trainer"
 
 async function fetchContent(path: string) {
     try {
-        const data = await apiRequest(`${path}`);
+        const data = await apiRequest(`${import.meta.env.BASE_URL}/${path}`);
         return data
     }
     catch {
