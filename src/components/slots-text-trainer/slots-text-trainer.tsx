@@ -24,15 +24,27 @@ interface Word {
   text: string;
 }
 
+interface SelectedBlank {
+  sid: number; // Sentence Index
+  bid: number; // Blank ID
+}
+
 export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [masterWords, setMasterWords] = useState<Word[]>([]);
   const [availableIds, setAvailableIds] = useState<number[]>([]);
   const [checked, setChecked] = useState(false);
 
+
+  const [selectedBlank, setSelectedBlank] = useState<SelectedBlank | null>(null);
   const dragRef = useRef<{ id: number; source: { type: "pool" | "blank"; sid?: number; bid?: number } } | null>(null);
   const touchMoveRef = useRef<{ lastX: number; lastY: number } | null>(null);
   const [dragGhost, setDragGhost] = useState<{ text: string; x: number; y: number } | null>(null);
+
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const lastTapRef = useRef<number | null>(null);
+  const TAP_MOVE_THRESHOLD = 8;   // px
+  const TAP_TIME_THRESHOLD = 300; // ms
 
   // --- Parse input once ---
   useEffect(() => {
@@ -67,7 +79,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
 
     if (data.wrong_answers) {
       data.wrong_answers.forEach((el: string, idx: number) => {
-        allWords.push({ id: wordIdCounter+idx, text: el });
+        allWords.push({ id: wordIdCounter + idx, text: el });
       })
     }
 
@@ -82,6 +94,9 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
     setSentences(parsedSentences);
     setAvailableIds(shuffled);
     setChecked(false);
+
+    const si = parsedSentences.findIndex((el) => { return el.blanks.length > 0; })
+    setSelectedBlank({ sid: si, bid: 1 });
   }, [data]);
 
   // --- Helpers ---
@@ -94,6 +109,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
     source: { type: "pool" | "blank"; sid?: number; bid?: number },
     target: { type: "pool" | "blank"; sid?: number; bid?: number }
   ) => {
+    // setSelectedBlank(null);
     const newSentences = sentences.map((s) => ({
       ...s,
       blanks: s.blanks.map((b) => ({ ...b })),
@@ -120,10 +136,35 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
         blank.placedId = wordId;
       }
     }
-
     setSentences(newSentences);
     setAvailableIds(newAvailable);
     window.dispatchEvent(new Event("resize"));
+  };
+
+  const handleBlankClick = (si: number, blank: Blank) => {
+    const isSelected = selectedBlank?.sid === si && selectedBlank?.bid === blank.id;
+    if (isSelected) {
+      setSelectedBlank(null);
+    }
+    else {
+      setSelectedBlank({ sid: si, bid: blank.id });
+    }
+  };
+
+  const handleWordClick = (wordId: number) => {
+    if (!selectedBlank) return; // Only act if a blank is selected
+    const { sid, bid } = selectedBlank;
+    handleMove(
+      wordId,
+      { type: "pool" },
+      { type: "blank", sid, bid }
+    );
+    const si = sentences.findIndex((el, idx) => { return idx >= selectedBlank.sid && el.blanks.find((el2) => el2.id > bid) });
+    if (si) {
+      const bi = sentences[si].blanks.find((el) => el.id > bid);
+      if (bi)
+        setSelectedBlank({ sid: si, bid: bi.id })
+    }
   };
 
   // --- Desktop drag handlers ---
@@ -146,10 +187,17 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
 
   // --- Touch drag logic ---
   const startTouchDrag = (wordId: number, source: any, touch: React.Touch) => {
-    // const startTouchDrag = (wordId: number, source: any, touch: Touch) => {
+    // --- RECORD TOUCH START ---
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+    };
+
     const onTouchMove = (ev: TouchEvent) => {
       const t = ev.touches[0];
       touchMoveRef.current = { lastX: t.clientX, lastY: t.clientY };
+
       setDragGhost({
         text: masterWords.find((w) => w.id === wordId)?.text || "",
         x: t.clientX,
@@ -160,9 +208,43 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
 
     const onTouchEnd = (ev: TouchEvent) => {
       const t = (ev.changedTouches && ev.changedTouches[0]) || touch;
+      // --- CHECK IF THIS WAS A TAP ---
+      if (touchStartRef.current) {
+        const dx = Math.abs(t.clientX - touchStartRef.current.x);
+        const dy = Math.abs(t.clientY - touchStartRef.current.y);
+        const dt = Date.now() - touchStartRef.current.time;
+
+        const isTap =
+          dx < TAP_MOVE_THRESHOLD &&
+          dy < TAP_MOVE_THRESHOLD &&
+          dt < TAP_TIME_THRESHOLD;
+
+        const target = ev.target as HTMLElement | null;
+        if (isTap && target) {
+          const now = Date.now();
+          const isDoubleTap =
+            lastTapRef.current &&
+            now - lastTapRef.current < TAP_TIME_THRESHOLD;
+          if (isDoubleTap) {
+            // 👉 DOUBLE TAP → CALL handleMove
+            handleMove(wordId, source, { type: "pool" });
+            lastTapRef.current = null;
+            cleanup();
+            return;
+          }
+          lastTapRef.current = now;
+          if (target.className.includes("word")) handleWordClick(wordId);
+          cleanup();
+          return;
+        }
+      }
       const el = document.elementFromPoint(t.clientX, t.clientY) as HTMLElement | null;
       resolveTouchDrop(el, wordId, source);
       setDragGhost(null);
+      cleanup();
+    };
+
+    const cleanup = () => {
       window.removeEventListener("touchmove", onTouchMove, { passive: false } as any);
       window.removeEventListener("touchend", onTouchEnd);
       window.removeEventListener("touchcancel", onTouchEnd);
@@ -193,7 +275,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
   };
 
   const onTouchStartWord = (ev: React.TouchEvent, wordId: number, source: any) => {
-    ev.preventDefault();
+    // ev.preventDefault();
     const touch = ev.touches[0];
     if (touch) startTouchDrag(wordId, source, touch);
   };
@@ -202,6 +284,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
   const poolWords = availableIds.map((id) => ({ id, text: getWordText(id)! }));
 
   const onCheck = () => setChecked(true);
+
   const onReset = () => {
     const shuffled = masterWords.map((w) => w.id).sort(() => Math.random() - 0.5);
     const resetSentences = sentences.map((s) => ({
@@ -211,6 +294,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
     setSentences(resetSentences);
     setAvailableIds(shuffled);
     setChecked(false);
+    setSelectedBlank(null);
     window.dispatchEvent(new Event("resize"));
   };
 
@@ -234,13 +318,18 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
                             ? " correct"
                             : " wrong"
                           : " filled"
-                        : "")
+                        : "") +
+                      // NEW: Selection class
+                      (selectedBlank?.sid === si && selectedBlank?.bid === s.blanks[pi].id ? " selectedSlot" : "")
                     }
                     data-sid={si}
                     data-bid={s.blanks[pi].id}
                     draggable={!!s.blanks[pi].placedId}
+                    onClick={() => handleBlankClick(si, s.blanks[pi])}
+                    onDoubleClick={() => {
+                      handleMove(s.blanks[pi].placedId!, { type: "blank", sid: si, bid: s.blanks[pi].id }, { type: "pool" })
+                    }}
                     onDragStart={(e) =>
-                      s.blanks[pi].placedId &&
                       onDragStart(e, s.blanks[pi].placedId!, { type: "blank", sid: si, bid: s.blanks[pi].id })
                     }
                     onDrop={(e) => onDrop(e, { type: "blank", sid: si, bid: s.blanks[pi].id })}
@@ -263,7 +352,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
         className="word-pool"
         onDrop={(e) => onDrop(e, { type: "pool" })}
         onDragOver={onDragOver}
-        onTouchStart={(e) => e.preventDefault()}
+      // onTouchStart={(e) => e.preventDefault()}
       >
         {poolWords.length ? (
           poolWords.map((w) => (
@@ -272,6 +361,7 @@ export const SlotsTextTrainer: React.FC<WordDragExerciseProps> = ({ data }) => {
               className="word"
               draggable
               onDragStart={(e) => onDragStart(e, w.id, { type: "pool" })}
+              onClick={(_) => handleWordClick(w.id)}
               onTouchStart={(e) => onTouchStartWord(e, w.id, { type: "pool" })}
             >
               {w.text}
