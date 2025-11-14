@@ -1,0 +1,235 @@
+/* Container */
+.lt-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-sizing: border-box;
+}
+
+/* Column (Slots1 / Slots2) vertical stack */
+.lt-col {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    gap: 0px;
+    overflow-x: auto;
+    height: 41vh;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar */
+.lt-col::-webkit-scrollbar {
+    display: none;
+}
+
+.lt-col {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* Card */
+.lt-card {
+    display: inline-block;
+    scroll-snap-align: start;
+    width: 100%;
+    /* adjust for compact mobile */
+    /* padding: 12px; */
+    border: 2px solid #ccc;
+    border-radius: 16px;
+    background: white;
+    box-sizing: border-box;
+    vertical-align: top;
+    transition: all 0.3s ease;
+    background: white;
+    /* animate bg/border changes */
+}
+
+.dark .lt-card {
+    background: rgb(22, 22, 22);
+}
+
+
+/* Card content */
+.lt-content {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    /* overflow-y: auto; */
+    gap: 8px;
+}
+
+/* Text */
+.lt-text {
+    font-size: 12px;
+    width: 100%;
+    word-break: break-word;
+    text-align: left;
+    background: white;
+    color: black;
+}
+
+.dark .lt-text {
+    background:  black;
+    color:white;
+}
+
+/* Inputs & Select */
+.lt-select,
+.lt-input1,
+.lt-input2 {
+    padding: 8px;
+    border: 1px solid #888;
+    width: 60vw;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    background: lightgray;
+    color: #0056b3;
+}
+
+.lt-input2 {
+    width: 80vw;
+}
+
+.lt-select {
+    width: 5rem;
+}
+
+/* Buttons container */
+.lt-buttons {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Buttons */
+.lt-btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.lt-btn-primary {
+    background: #007bff;
+    color: white;
+}
+
+.lt-btn-primary:hover {
+    background: #0056b3;
+}
+
+.lt-btn-secondary {
+    background: #ddd;
+    color: black;
+}
+
+.lt-btn-secondary:hover {
+    background: #bbb;
+}
+
+/* Correct / Wrong backgrounds */
+.bg-correct {
+    background-color: #ccf5d1 !important;
+}
+
+.bg-wrong {
+    background-color: #ffd1d9 !important;
+}
+
+/* Borders for linking */
+.border-gray {
+    border-color: #bbb !important;
+}
+
+.border-red {
+    border-color: red !important;
+}
+
+.border-blue {
+    border-color: blue !important;
+}
+
+.border-green {
+    border-color: green !important;
+}
+
+.border-purple {
+    border-color: purple !important;
+}
+
+.border-orange {
+    border-color: orange !important;
+}
+
+.border-teal {
+    border-color: teal !important;
+}
+
+/* === Arrow buttons for scrolling === */
+.lt-arrow {
+    position: absolute;
+    top: 90%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(0, 0, 0, 0.1);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+}
+
+.lt-arrow:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.lt-arrow-left {
+    left: 0;
+}
+
+.lt-arrow-right {
+    right: 0;
+}
+
+/* Mobile / compact UI */
+@media (max-width: 768px) {
+    .lt-card {
+        width: 100%;
+        /* almost full screen width */
+    }
+
+    .lt-col {
+        gap: 16px;
+    }
+
+    .lt-buttons {
+        justify-content: center;
+        gap: 12px;
+    }
+
+    .lt-text {
+        font-size: 13px;
+    }
+
+    .lt-select,
+    .lt-input {
+        font-size: 13px;
+        padding: 6px;
+    }
+}
+
+.lt-inputs {
+    display: flex;
+    flex-direction: row;
+}

@@ -1,6 +1,7 @@
 import { Q2Form, apiRequest, Q2DataList, Q2App } from "q2-web"
 import { OneWordTrainer } from "./one-word-trainer/one-word-trainer"
 import { SlotsTextTrainer } from "./slots-text-trainer/slots-text-trainer"
+import { LinkSlotsTrainer } from "./link-slots-trainer/link-slots-trainer"
 
 async function fetchContent(path: string) {
     try {
@@ -43,6 +44,10 @@ async function getFileContent(path: string) {
     else if (['slot_text'].every(k => k in file_content[0])) {
         return getFileForm(SlotsTextTrainer, file_content[0])
     }
+    // slot text
+    else if (['slots_1', 'slots_2', 'answers'].every(k => k in file_content[0])) {
+        return getFileForm(LinkSlotsTrainer, file_content[0])
+    }
     else {
         console.log("Unknown format", Object.keys(file_content[0]))
     }
@@ -75,7 +80,7 @@ export async function getFolderContent(path: string, title_path: string) {
         contentList.hookDataGridRowClicked = (datagrid: Q2DataList) => {
             const { title, folder, type } = datagrid.state.data[datagrid.state.selectedRow];
             const next_path = `${path}/${folder}`
-            console.log(datagrid.state.data[datagrid.state.selectedRow], next_path)
+            // console.log(datagrid.state.data[datagrid.state.selectedRow], next_path)
             if (type === "folder") {
                 getFolderContent(next_path, `${title_path}<font color=red>/</font>${title}`).then((f) => { f?.showDialog() })
             }
