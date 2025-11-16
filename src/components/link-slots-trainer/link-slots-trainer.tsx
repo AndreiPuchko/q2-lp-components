@@ -58,20 +58,55 @@ export const LinkSlotsTrainer: React.FC<LinkTrainerData> = ({ data }) => {
 
     const getBorderColor = (slot1Key: string) => {
         if (!checked) return "border-gray";
-        const target = userAnswers[slot1Key];
+        const target = userAnswers[`${slot1Key}`];
         if (!target) return "border-gray";
 
         const index = slot2Keys.indexOf(target);
-        const colors = ["red", "blue", "green", "purple", "orange", "teal"];
+        const colors = ["cyan", "blue", "green", "purple", "orange", "teal"];
         return `border-${colors[index % colors.length]}`;
     };
 
     const getBackground = (slot1Key: string) => {
         if (!checked) return "";
-        const correct = answers[slot1Key];
+        const correctAnswer = answers[`_${slot1Key}`];
         const user = userAnswers[slot1Key];
         if (!user) return "";
-        return user === correct ? "bg-correct" : "bg-wrong";
+        return user === correctAnswer ? "bg-correct" : "bg-wrong";
+    };
+
+    const getBorderColor2 = (slot2Key: string) => {
+        if (!checked) return "border-gray";
+
+        // Find all slot1 keys that selected this slot2 key
+        const matchingSlot1 = Object.keys(userAnswers).filter(
+            k => userAnswers[k] === slot2Key
+        );
+
+        if (matchingSlot1.length === 0) return "border-gray";
+
+        // Use the first matched slot1 key to determine color
+        const index = slot1Keys.indexOf(matchingSlot1[0]);
+        const colors = ["cyan", "blue", "green", "purple", "orange", "teal"];
+        return `border-${colors[index % colors.length]}`;
+    };
+
+    // --- Background for slots_2 ---
+    const getBackground2 = (slot2Key: string) => {
+        if (!checked) return "";
+
+        // Find all slot1 keys that selected this slot2 key
+        const matchingSlot1 = Object.keys(userAnswers).filter(
+            k => userAnswers[k] === slot2Key
+        );
+
+        if (matchingSlot1.length === 0) return "";
+
+        // Determine if selection was correct
+        const correct = matchingSlot1.some(
+            k => answers[`_${k}`] === slot2Key
+        );
+
+        return correct ? "bg-correct" : "bg-wrong";
     };
 
     // Scroll handlers
@@ -132,7 +167,8 @@ export const LinkSlotsTrainer: React.FC<LinkTrainerData> = ({ data }) => {
 
                 <div className="lt-col" ref={slot2Ref} style={{ maxHeight: `${maxHeight}px` }}>
                     {slot2Keys.map((k) => (
-                        <div key={k} className="lt-card border-gray">
+                        <div key={k} className={`lt-card ${getBorderColor2(k)} ${getBackground2(k)}`}>
+                            
                             <div className="lt-content">
                                 <input
                                     type="text"

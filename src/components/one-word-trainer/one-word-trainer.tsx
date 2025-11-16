@@ -237,7 +237,7 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
     };
 
     return (
-        <div className="exercise-container">
+        <div className="exercise-container q2-scroll">
             <div className="stats">
                 <span>Correct: {stats.correct}</span>
                 <span>Wrong: {stats.wrong}</span>
@@ -279,7 +279,7 @@ export const OneWordTrainer: React.FC<OneWordTrainerData> = ({ data }) => {
             </div>
 
             <div className="key">
-                <h3>{ex.key}</h3> [{answers[currentIndex]?.correctCount}]
+                <h3>{ex.key}</h3> <div className="key-repeat-coount">{answers[currentIndex]?.correctCount}</div>
             </div>
 
             <div className="word-pool">

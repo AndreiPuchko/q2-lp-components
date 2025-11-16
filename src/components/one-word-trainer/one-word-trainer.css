@@ -41,6 +41,7 @@
     white-space: normal;
     min-height: 10rem;
     display: block;
+    overflow: auto;
     padding: 0.3rem 0;
 }
 
@@ -79,6 +80,7 @@
     height: auto;
     gap: 0.5rem;
     min-height: 25px;
+    overflow: auto;
     border: 1px solid #ccc;
     border-radius: 6px;
     background: var(--form-groupbox-bg);
@@ -119,6 +121,31 @@
     padding: 0.5rem;
 }
 
+@media (max-height: 400px) {
+    .buttons {
+        padding: 0rem;
+        padding-top: 4px;
+    }
+    .word-pool {
+        margin: 0;
+        padding: 0 0.2rem;
+    }
+    .exercise-container {
+        padding-bottom: 0px !important;
+        margin: 0;
+    }
+    .stats {
+        margin: 0;
+        padding: 0;
+        gap: 0 0.5rem;
+    }
+    .one-word-sentence {
+        padding: 0;
+        margin: 0;
+        padding-bottom: 0px;
+    }
+}
+
 .btn {
     padding: 0.5rem 1rem;
     border: none;
@@ -157,11 +184,24 @@
     background: rgb(41, 5, 5);
     color: wheat;
     border-radius: 0.5rem;
-    border: 1px solid gray;
+    border: 1px solid lightgray;
 }
 
 .key {
     display: flex;
     align-items: center;
     justify-content: space-around;
+}
+
+.key-repeat-coount {
+    border: 1px solid gray;
+    border-radius: 0.5rem;
+    padding: 0 0.3rem;
+}
+
+@media (max-height: 600px) {
+    .one-word-sentence {
+        min-height: 0rem;
+    }
+
 }

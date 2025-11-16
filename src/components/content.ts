@@ -57,7 +57,7 @@ export async function getFolderContent(path: string, title_path: string) {
     const folder_content: any = await fetchContent(`${path}/folder_content.json`);
     const content: Array<object> = [];
     if (folder_content.folders) {
-        folder_content.folders.forEach((el:any) => { content.push({ folder: el, title: `🗀 ${el}`, type: "folder" }) })
+        folder_content.folders.forEach((el:any) => { content.push({ folder: el, title: `[ ${el} ]`, type: "folder" }) })
     }
     if (folder_content.files) {
         folder_content.files.forEach((el:any) => { content.push({ folder: el, title: el.replace(".json", ""), type: "file" }) })

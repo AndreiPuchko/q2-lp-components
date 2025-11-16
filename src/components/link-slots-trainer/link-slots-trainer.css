@@ -4,18 +4,20 @@
     flex-direction: column;
     gap: 16px;
     box-sizing: border-box;
+    padding: 8px;
 }
 
-/* Column (Slots1 / Slots2) vertical stack */
+/* Column (Slots1 / Slots2) vertical stack with horizontal scroll */
 .lt-col {
     position: relative;
     display: flex;
     flex-direction: row;
-    gap: 0px;
+    gap: 12px;
     overflow-x: auto;
-    height: 41vh;
     scroll-snap-type: x mandatory;
-    padding-bottom: 0px;
+    padding-bottom: 8px;
+    max-height: 60vh;
+    /* dynamic max height for viewport */
     -webkit-overflow-scrolling: touch;
 }
 
@@ -31,32 +33,28 @@
 
 /* Card */
 .lt-card {
-    display: inline-block;
+  display: inline-block;
     scroll-snap-align: start;
-    width: 100%;
-    /* adjust for compact mobile */
-    /* padding: 12px; */
+    width: 100%; /* full width of parent column */
+    min-width: 91vw; 
+    padding: 12px;
     border: 2px solid #ccc;
     border-radius: 16px;
     background: white;
     box-sizing: border-box;
     vertical-align: top;
-    transition: all 0.3s ease;
-    background: white;
-    /* animate bg/border changes */
+    transition: all 0.3s ease; /* animate bg/border changes */
 }
 
 .dark .lt-card {
     background: rgb(22, 22, 22);
 }
 
-
 /* Card content */
 .lt-content {
     display: flex;
     flex-direction: column;
     width: 100%;
-    /* overflow-y: auto; */
     gap: 8px;
 }
 
@@ -71,8 +69,8 @@
 }
 
 .dark .lt-text {
-    background:  black;
-    color:white;
+    background: black;
+    color: white;
 }
 
 /* Inputs & Select */
@@ -81,11 +79,14 @@
 .lt-input2 {
     padding: 8px;
     border: 1px solid #888;
-    width: 60vw;
     border-radius: 0.5rem;
     font-size: 1rem;
     background: lightgray;
     color: #0056b3;
+}
+
+.lt-input1 {
+    width: 55vw;
 }
 
 .lt-input2 {
@@ -142,6 +143,9 @@
 }
 
 /* Borders for linking */
+.border-cyan {
+    border-color: cyan !important;
+}
 .border-gray {
     border-color: #bbb !important;
 }
@@ -206,9 +210,9 @@
 @media (max-width: 768px) {
     .lt-card {
         width: 100%;
-        /* almost full screen width */
     }
 
+    /* almost full screen */
     .lt-col {
         gap: 16px;
     }
@@ -223,13 +227,17 @@
     }
 
     .lt-select,
-    .lt-input {
+    .lt-input1,
+    .lt-input2 {
         font-size: 13px;
         padding: 6px;
     }
 }
 
+/* Inputs flex container for notes + select if needed */
 .lt-inputs {
     display: flex;
     flex-direction: row;
+    gap: 8px;
+    flex-wrap: wrap;
 }
