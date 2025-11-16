@@ -4,7 +4,7 @@
     flex-direction: column;
     gap: 16px;
     box-sizing: border-box;
-    padding: 8px;
+    padding: 2px;
 }
 
 /* Column (Slots1 / Slots2) vertical stack with horizontal scroll */
@@ -13,7 +13,7 @@
     display: flex;
     flex-direction: row;
     gap: 12px;
-    overflow-x: auto;
+    overflow: auto;
     scroll-snap-type: x mandatory;
     padding-bottom: 8px;
     max-height: 60vh;
@@ -33,17 +33,17 @@
 
 /* Card */
 .lt-card {
-  display: inline-block;
+    display: inline-block;
     scroll-snap-align: start;
-    width: 100%; /* full width of parent column */
-    min-width: 91vw; 
-    padding: 12px;
+    min-width: calc(100% - 1px);
+    padding: 2px;
     border: 2px solid #ccc;
     border-radius: 16px;
     background: white;
     box-sizing: border-box;
     vertical-align: top;
-    transition: all 0.3s ease; /* animate bg/border changes */
+    transition: all 0.3s ease;
+    /* animate bg/border changes */
 }
 
 .dark .lt-card {
@@ -60,11 +60,13 @@
 
 /* Text */
 .lt-text {
-    font-size: 12px;
+    font-size: 1rem;
     width: 100%;
     word-break: break-word;
+    border-radius: 16px;
     text-align: left;
     background: white;
+    overflow: auto;
     color: black;
 }
 
@@ -86,7 +88,7 @@
 }
 
 .lt-input1 {
-    width: 55vw;
+    width: 40vw;
 }
 
 .lt-input2 {
@@ -146,6 +148,7 @@
 .border-cyan {
     border-color: cyan !important;
 }
+
 .border-gray {
     border-color: #bbb !important;
 }
@@ -177,7 +180,7 @@
 /* === Arrow buttons for scrolling === */
 .lt-arrow {
     position: absolute;
-    top: 90%;
+    top: 85%;
     transform: translateY(-50%);
     z-index: 10;
     background: rgba(0, 0, 0, 0.1);
@@ -191,6 +194,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    margin: 0.1rem;
     transition: background 0.2s ease;
 }
 
@@ -223,7 +227,7 @@
     }
 
     .lt-text {
-        font-size: 13px;
+        font-size: 1rem;
     }
 
     .lt-select,

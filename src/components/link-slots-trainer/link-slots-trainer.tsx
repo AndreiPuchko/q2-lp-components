@@ -152,7 +152,7 @@ export const LinkSlotsTrainer: React.FC<LinkTrainerData> = ({ data }) => {
                                         onChange={(e) => handleNote(k, e.target.value)}
                                     />
                                 </div>
-                                <div className="lt-text">{k}. {slots_1[k]}</div>
+                                <div className="lt-text q2-scroll">{k}. {slots_1[k]}</div>
 
                             </div>
                         </div>
@@ -168,7 +168,7 @@ export const LinkSlotsTrainer: React.FC<LinkTrainerData> = ({ data }) => {
                 <div className="lt-col" ref={slot2Ref} style={{ maxHeight: `${maxHeight}px` }}>
                     {slot2Keys.map((k) => (
                         <div key={k} className={`lt-card ${getBorderColor2(k)} ${getBackground2(k)}`}>
-                            
+
                             <div className="lt-content">
                                 <input
                                     type="text"
@@ -177,13 +177,12 @@ export const LinkSlotsTrainer: React.FC<LinkTrainerData> = ({ data }) => {
                                     value={notes[k] || ""}
                                     onChange={(e) => handleNote(k, e.target.value)}
                                 />
-                                <div className="lt-text">{k}. {slots_2[k]}</div>
+                                <div className="lt-text q2-scroll">{k}. {slots_2[k]}</div>
                             </div>
                         </div>
                     ))}
                 </div>
             </div>
-
             {/* Buttons */}
             <div className="lt-buttons">
                 <button className="lt-btn lt-btn-primary" onClick={() => setChecked(true)}>
