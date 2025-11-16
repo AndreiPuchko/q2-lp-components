@@ -26,7 +26,7 @@
     padding: 0.75rem;
     border-radius: 6px;
     background: var(--dialog-bg);
-    margin-bottom: 1rem;
+    /* margin-bottom: 1rem; */
     font-size: 1rem;
     font-weight: 600;
 }
@@ -72,13 +72,14 @@
     display: flex;
     flex-wrap: wrap;
     height: auto;
+    overflow: auto;
     gap: 0.5rem;
     min-height: 25px;
     border: 1px solid #ccc;
     border-radius: 6px;
     background: var(--form-groupbox-bg);
     padding: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0rem;
 }
 
 .word {
@@ -88,6 +89,7 @@
     border-radius: 4px;
     cursor: move;
     user-select: none;
+    max-height: 2rem;
 }
 
 .selectedSlot {
@@ -155,4 +157,29 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
     pointer-events: none;
     z-index: 9999;
+}
+
+
+@media (max-height: 400px) {
+    .exercise-container {
+        padding-bottom: 0px !important;
+        margin: 0;
+    }
+    .sentence-list {
+        padding: 0;
+    }
+    .sentence {
+        line-height: 1.6rem;;
+    }
+    .blank {
+        padding: 0.2rem ;
+    }
+    .word-pool {
+        padding: 0;
+        background: #45a049;
+    }
+    .word {
+        padding: 0 0.2rem;
+    }
+
 }
