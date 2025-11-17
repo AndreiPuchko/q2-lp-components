@@ -14950,14 +14950,9 @@ const lf = (r, c, u) => {
     ] })
   ] });
 };
-function zS() {
-  let r = window.location.pathname.split("/").filter(Boolean);
-  return (r === void 0 || r.length === 0) && (r = [""]), "/" + r[0] + "/";
-}
 async function vp(r) {
   try {
-    const c = zS();
-    return console.log("->", c), await $n(`${c}/public/${r}`);
+    return console.log("->", `/public//${r}`, "<-", "/public/"), await $n(`/public//${r}`);
   } catch {
     return [];
   }
@@ -14976,7 +14971,7 @@ function nf(r, c) {
     }
   }), u;
 }
-async function jS(r) {
+async function zS(r) {
   const c = await vp(r);
   if (["key", "sentence", "words"].every((u) => u in c[0]))
     return nf(DS, c);
@@ -15007,7 +15002,7 @@ async function yp(r, c) {
       const { title: y, folder: v, type: g } = d.state.data[d.state.selectedRow], M = `${r}/${v}`;
       g === "folder" ? yp(M, `${c}<font color=red>/</font>${y}`).then((z) => {
         z?.showDialog();
-      }) : jS(M).then((z) => {
+      }) : zS(M).then((z) => {
         z?.showDialog();
       });
     };
@@ -15015,7 +15010,7 @@ async function yp(r, c) {
     return h.class = " form-selector ", h.add_control("/v"), h.add_control("/h", "", { alignment: 5, class: "title-panel" }), h.add_control("label", c, { control: "label", class: "selector-title" }), h.add_control("/"), h.add_control("/v"), h.add_control("sc", "", { control: "list", data: o }), h;
   }
 }
-class RS extends ka {
+class jS extends ka {
   constructor(c) {
     super(c);
   }
@@ -15028,10 +15023,10 @@ class RS extends ka {
     return /* @__PURE__ */ S.jsx("div", { children: super.render() });
   }
 }
-function qS(r, c = {}) {
+function RS(r, c = {}) {
   const u = Q1.createRoot(r);
   return u.render(
-    /* @__PURE__ */ S.jsx(tt.StrictMode, { children: /* @__PURE__ */ S.jsx(RS, { q2forms: c.q2forms || [] }) })
+    /* @__PURE__ */ S.jsx(tt.StrictMode, { children: /* @__PURE__ */ S.jsx(jS, { q2forms: c.q2forms || [] }) })
   ), {
     destroy() {
       u.unmount();
@@ -15039,5 +15034,5 @@ function qS(r, c = {}) {
   };
 }
 export {
-  qS as createQ2LPWidget
+  RS as createQ2LPWidget
 };
