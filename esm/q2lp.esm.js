@@ -14955,7 +14955,7 @@ async function vp(r) {
     const c = new URL(document.baseURI);
     if (c.protocol !== "file:") {
       let u = c.pathname;
-      return console.log("1.", u, "2.", "/public/"), u !== "/public/" && (u += "/public//"), console.log("3.", u), await Zl(`${u}/${r}`);
+      return u !== "/public/" && (u += "/public//"), await Zl(`${u}/${r}`);
     } else {
       const s = c.pathname.split("/").filter(Boolean), o = s[s.length - 2] + "/public/";
       return await Zl(`${o}/${r}`);
