@@ -6,7 +6,9 @@
   "homepage": "https://andreipuchko.github.io/q2-lp-components",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build  && vite build --config vite.config.esm.ts",
+    "build:umd": "vite build --config vite.config.umd.ts",
+    "build:esm": "vite build --config vite.config.esm.ts",
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",

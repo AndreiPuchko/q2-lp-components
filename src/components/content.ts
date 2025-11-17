@@ -5,8 +5,21 @@ import { LinkSlotsTrainer } from "./link-slots-trainer/link-slots-trainer"
 
 async function fetchContent(path: string) {
     try {
-        const data = await apiRequest(`${import.meta.env.BASE_URL}/${path}`);
-        return data
+        const url = new URL(document.baseURI)
+        if (url.protocol !== "file:") {
+            let baseName = url.pathname;
+            if (baseName !== import.meta.env.BASE_URL)
+                baseName += `${import.meta.env.BASE_URL}/`
+            const data = await apiRequest(`${baseName}/${path}`);
+            return data
+        }
+        else {
+            const segments = url.pathname.split("/");
+            const filtered = segments.filter(Boolean);
+            const folderName = filtered[filtered.length - 2] + import.meta.env.BASE_URL ;
+            const data = await apiRequest(`${folderName}/${path}`);
+            return data
+        }
     }
     catch {
         return []
@@ -57,10 +70,10 @@ export async function getFolderContent(path: string, title_path: string) {
     const folder_content: any = await fetchContent(`${path}/folder_content.json`);
     const content: Array<object> = [];
     if (folder_content.folders) {
-        folder_content.folders.forEach((el:any) => { content.push({ folder: el, title: `[ ${el} ]`, type: "folder" }) })
+        folder_content.folders.forEach((el: any) => { content.push({ folder: el, title: `[ ${el} ]`, type: "folder" }) })
     }
     if (folder_content.files) {
-        folder_content.files.forEach((el:any) => { content.push({ folder: el, title: el.replace(".json", ""), type: "file" }) })
+        folder_content.files.forEach((el: any) => { content.push({ folder: el, title: el.replace(".json", ""), type: "file" }) })
     }
     if (Object.keys(folder_content).length === 0) {
         Q2App.instance?.showMsg("Ist leer")
