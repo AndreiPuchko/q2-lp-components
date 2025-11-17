@@ -14955,7 +14955,7 @@ function zS() {
 }
 async function vp(c) {
   try {
-    return await $n(`${zS()}/${c}`);
+    return await $n(`${zS()}/public/${c}`);
   } catch {
     return [];
   }
