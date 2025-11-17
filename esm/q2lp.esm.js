@@ -14952,7 +14952,7 @@ const lf = (r, c, u) => {
 };
 async function vp(r) {
   try {
-    return await $n(`/public//${r}`);
+    return console.log("->", `/public//${r}`), await $n(`/public//${r}`);
   } catch {
     return [];
   }
