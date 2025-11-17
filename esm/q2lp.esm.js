@@ -14951,7 +14951,8 @@ const lf = (r, c, u) => {
   ] });
 };
 function Qy() {
-  return "/" + window.location.pathname.split("/").filter(Boolean)[0] + "/";
+  let r = window.location.pathname.split("/").filter(Boolean);
+  return r === void 0 && (r = [""]), "/" + r[0] + "/";
 }
 async function gp(r) {
   try {
