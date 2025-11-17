@@ -14952,7 +14952,7 @@ const lf = (r, c, u) => {
 };
 function Qy() {
   let r = window.location.pathname.split("/").filter(Boolean);
-  return r === void 0 && (r = [""]), "/" + r[0] + "/";
+  return (r === void 0 || r.length === 0) && (r = [""]), "/" + r[0] + "/";
 }
 async function gp(r) {
   try {
