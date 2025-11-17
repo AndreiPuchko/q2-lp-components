@@ -14952,7 +14952,9 @@ const lf = (r, c, u) => {
 };
 async function vp(r) {
   try {
-    return console.log("->", `/public//${r}`, "<-", "/public/"), await $n(`/public//${r}`);
+    console.log("->", `/public//${r}`, "<-", "/public/");
+    let c = "/public/";
+    return window.q2lp_basename && window.q2lp_basename !== "" && (c = window.q2lp_basename), await $n(`${c}/${r}`);
   } catch {
     return [];
   }
