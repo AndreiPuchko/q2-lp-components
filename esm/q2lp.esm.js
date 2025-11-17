@@ -14952,8 +14952,8 @@ const lf = (r, c, u) => {
 };
 async function vp(r) {
   try {
-    const c = new URL(document.baseURI).pathname;
-    return await $n(`${c}/${r}`);
+    let c = new URL(document.baseURI).pathname;
+    return c !== "/public/" && (c += "/public//"), console.log(c), await $n(`${c}/${r}`);
   } catch {
     return [];
   }
