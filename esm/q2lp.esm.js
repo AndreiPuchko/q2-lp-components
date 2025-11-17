@@ -14953,7 +14953,7 @@ const lf = (r, c, u) => {
 async function vp(r) {
   try {
     let c = new URL(document.baseURI).pathname;
-    return c !== "/public/" && (c += "/public//"), console.log(c), await $n(`${c}/${r}`);
+    return console.log("1.", c, "2.", "/public/"), c !== "/public/" && (c += "/public//"), console.log("3.", c), await $n(`${c}/${r}`);
   } catch {
     return [];
   }
